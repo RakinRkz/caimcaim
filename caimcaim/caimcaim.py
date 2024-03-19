@@ -88,6 +88,9 @@ class CAIMD(BaseEstimator, TransformerMixin):
         print('Categorical', categorical)
         min_splits = np.unique(y).shape[0]
 
+        # Initialize a counter for the number of features processed
+        features_processed = 0
+
         # Define a function to be executed in parallel for each feature
         def process_feature(j):
             if j in categorical:
@@ -130,6 +133,10 @@ class CAIMD(BaseEstimator, TransformerMixin):
 
             self.split_scheme[j] = mainscheme
             print('#', j, ' GLOBAL CAIM ', global_caim)
+
+            # Increment the counter and print progress
+            features_processed += 1
+            print(f"Processed {features_processed} out of {X.shape[1]} features.")
 
         # Use a ThreadPoolExecutor to execute the process_feature function in parallel for each feature
         with concurrent.futures.ThreadPoolExecutor() as executor:
