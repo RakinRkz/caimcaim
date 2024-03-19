@@ -21,7 +21,7 @@ CAIM
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-
+import concurrent.futures
 
 class CAIMD(BaseEstimator, TransformerMixin):
 
@@ -67,7 +67,7 @@ class CAIMD(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, pandas dataframe, shape [n_samples, n_feature]
             Input array can contain missing values
-        y:  array-like, pandas dataframe, shape [n_samples]
+        y: array-like, pandas dataframe, shape [n_samples]
             Target variable. Must be categorical.
         Returns
         -------
@@ -86,18 +86,18 @@ class CAIMD(BaseEstimator, TransformerMixin):
             self.categorical = self.check_categorical(X, y)
         categorical = self.categorical
         print('Categorical', categorical)
-
         min_splits = np.unique(y).shape[0]
 
-        for j in range(X.shape[1]):
+        # Define a function to be executed in parallel for each feature
+        def process_feature(j):
             if j in categorical:
-                continue
+                return
             xj = X[:, j]
             xj = xj[np.invert(np.isnan(xj))]
             new_index = xj.argsort()
             xj = xj[new_index]
             yj = y[new_index]
-            allsplits = np.unique(xj)[1:-1].tolist()  # potential split points
+            allsplits = np.unique(xj)[1:-1].tolist() # potential split points
             global_caim = -1
             mainscheme = [xj[0], xj[-1]]
             best_caim = 0
@@ -130,6 +130,11 @@ class CAIMD(BaseEstimator, TransformerMixin):
 
             self.split_scheme[j] = mainscheme
             print('#', j, ' GLOBAL CAIM ', global_caim)
+
+        # Use a ThreadPoolExecutor to execute the process_feature function in parallel for each feature
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(process_feature, range(X.shape[1]))
+
         return self
 
     def transform(self, X):
