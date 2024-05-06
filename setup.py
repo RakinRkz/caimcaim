@@ -17,7 +17,7 @@ setup(name='caimcaim',
       author_email='me@airysen.co',
       license='MIT',
       packages=find_packages(),
-      install_requires=['numpy', 'sklearn'],
+      install_requires=['numpy', 'scikit-learn'],
       include_package_data=True,
 
       zip_safe=False)
